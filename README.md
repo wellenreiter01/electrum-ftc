@@ -42,13 +42,13 @@ Download the latest version from our [release page](https://github.com/Featherco
 First the dependencies need to be installed. For Ubuntu/Debian.
 
 ```sh
-    sudo apt-get install git libssl-dev python3-pip python3-pyqt5 pyqt5-dev-tools libudev-dev libusb-1.0.0-dev
+    sudo apt-get install git libssl-dev python3-pip libudev-dev libusb-1.0.0-dev
 ```
 
 Then, install the current release of electrum-ftc.
 
 ```sh
-    pip3 install git+https://github.com/Feathercoin-Foundation/electrum-ftc.git@current_release
+    pip3 install git+https://github.com/Feathercoin-Foundation/electrum-ftc.git@current_release#egg=Electrum-FTC[full]
 ```
 
 Prepend `sudo` if you want to install electrum-ftc system-wide (not recommended).
@@ -92,5 +92,5 @@ Compile the icons file for Qt.
 Run electrum-ftc
 
 ```sh
-    pipenv run python ./electrum-ftc
+    pipenv run python ./run_electrum
 ```

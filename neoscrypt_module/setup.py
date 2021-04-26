@@ -4,7 +4,7 @@ import platform
 
 library_dirs = []
 if platform.system() == 'Windows':
-    library_dirs = ['c:\\python3.5.4']
+    library_dirs = ['c:\\python3.6.6']
     def get_msvcr():
         import sys
         msc_ver = sys.version.split('MSC v.')

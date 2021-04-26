@@ -2,15 +2,31 @@
 
 # python setup.py sdist --format=zip,gztar
 
+<<<<<<< HEAD
 from setuptools import setup
 from setuptools.command.build_py import build_py
 from setuptools.command.install import install
 from distutils import core
+=======
+>>>>>>> 273e0c886c4c06724fc5179e5e238f43af901a81
 import os
 import sys
 import platform
-import imp
+import importlib.util
 import argparse
+import subprocess
+
+from distutils import core
+from setuptools import setup, find_packages
+from setuptools.command.build_py import build_py
+from setuptools.command.install import install
+
+MIN_PYTHON_VERSION = "3.6.1"
+_min_python_version_tuple = tuple(map(int, (MIN_PYTHON_VERSION.split("."))))
+
+
+if sys.version_info[:3] < _min_python_version_tuple:
+    sys.exit("Error: Electrum requires Python version >= %s..." % MIN_PYTHON_VERSION)
 
 with open('contrib/requirements/requirements.txt') as f:
     requirements = f.read().splitlines()
@@ -18,10 +34,10 @@ with open('contrib/requirements/requirements.txt') as f:
 with open('contrib/requirements/requirements-hw.txt') as f:
     requirements_hw = f.read().splitlines()
 
-version = imp.load_source('version', 'lib/version.py')
-
-if sys.version_info[:3] < (3, 4, 0):
-    sys.exit("Error: Electrum requires Python version >= 3.4.0...")
+# load version.py; needlessly complicated alternative to "imp.load_source":
+version_spec = importlib.util.spec_from_file_location('version', 'electrum/version.py')
+version_module = version = importlib.util.module_from_spec(version_spec)
+version_spec.loader.exec_module(version_module)
 
 data_files = []
 
@@ -40,15 +56,19 @@ if platform.system() in ['Linux', 'FreeBSD', 'DragonFly']:
             usr_share = os.path.expanduser('~/.local/share')
     data_files += [
         (os.path.join(usr_share, 'applications/'), ['electrum-ftc.desktop']),
+<<<<<<< HEAD
         (os.path.join(usr_share, icons_dirname), ['icons/electrum_light.png'])
+=======
+        (os.path.join(usr_share, icons_dirname), ['electrum/gui/icons/electrum_light.png']),
+>>>>>>> 273e0c886c4c06724fc5179e5e238f43af901a81
     ]
 
 extras_require = {
     'hardware': requirements_hw,
     'fast': ['pycryptodomex'],
-    ':python_version < "3.5"': ['typing>=3.0.0'],
+    'gui': ['pyqt5'],
 }
-extras_require['full'] = extras_require['hardware'] + extras_require['fast']
+extras_require['full'] = [pkg for sublist in list(extras_require.values()) for pkg in sublist]
 
 class BuildPyCommand(build_py):
     def run(self):
@@ -78,33 +98,37 @@ class InstallCommand(install):
         setup.run_command('install')
         install.run(self)
 
+class CustomInstallCommand(install):
+    def run(self):
+        setup = core.run_setup('neoscrypt_module/setup.py', stop_after='commandline')
+        if platform.system() == 'Windows':
+            setup.command_options['build_ext'] = {'compiler': ('build_ext', 'mingw32')}
+        setup.run_command('install')
+        install.run(self)
+
+class BuildPyCommand(build_py):
+    def run(self):
+        build_py.run(self)
+        with open('build/lib/electrum_ftc/version.py', 'r+') as fp:
+            verfile = fp.readlines()
+            verfile[0] = "ELECTRUM_FTC_VERSION = '{}'\n".format(
+                version.ELECTRUM_FTC_VERSION)
+            fp.seek(0)
+            fp.writelines(verfile)
+            fp.truncate()
+
 setup(
     name="Electrum-FTC",
     version=version.ELECTRUM_FTC_VERSION,
-    cmdclass={'build_py': BuildPyCommand, 'install': InstallCommand},
+    python_requires='>={}'.format(MIN_PYTHON_VERSION),
     install_requires=requirements,
     extras_require=extras_require,
     packages=[
-        'electrum_ftc',
-        'electrum_ftc_gui',
-        'electrum_ftc_gui.qt',
-        'electrum_ftc_plugins',
-        'electrum_ftc_plugins.audio_modem',
-        'electrum_ftc_plugins.cosigner_pool',
-        'electrum_ftc_plugins.email_requests',
-        'electrum_ftc_plugins.hw_wallet',
-        'electrum_ftc_plugins.keepkey',
-        'electrum_ftc_plugins.labels',
-        'electrum_ftc_plugins.ledger',
-        'electrum_ftc_plugins.revealer',
-        'electrum_ftc_plugins.trezor',
-        'electrum_ftc_plugins.digitalbitbox',
-        'electrum_ftc_plugins.virtualkeyboard',
+        pkg.replace("electrum", "electrum_ftc") for pkg in find_packages(
+            exclude=['*.tests', '*.kivy', '*.kivy.*'])
     ],
     package_dir={
-        'electrum_ftc': 'lib',
-        'electrum_ftc_gui': 'gui',
-        'electrum_ftc_plugins': 'plugins',
+        'electrum_ftc': 'electrum'
     },
     package_data={
         '': ['*.txt', '*.json', '*.ttf', '*.otf'],
@@ -112,13 +136,20 @@ setup(
             'wordlist/*.txt',
             'locale/*/LC_MESSAGES/electrum.mo',
         ],
+        'electrum.gui': [
+            'icons/*',
+        ],
     },
-    scripts=['electrum-ftc'],
+    scripts=['electrum/electrum-ftc'],
     data_files=data_files,
     description="Lightweight Feathercoin Wallet",
     author="Thomas Voegtlin; Feathercoin Development Foundation",
     author_email="thomasv@electrum.org; info@feathercoin.foundation",
     license="MIT Licence",
     url="https://electrum.org",
-    long_description="""Lightweight Feathercoin Wallet"""
+    long_description="""Lightweight Feathercoin Wallet""",
+    cmdclass={
+        'build_py': BuildPyCommand,
+        'install': CustomInstallCommand,
+    },
 )
