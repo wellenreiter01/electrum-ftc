@@ -498,6 +498,9 @@ def is_valid_email(s):
 
 
 def is_hash256_str(text: Any) -> bool:
+    if not isinstance(text, str): return False
+    if len(text) != 64: return False
+    return is_hex_str(text)
 
 
 def is_hex_str(text: Any) -> bool:

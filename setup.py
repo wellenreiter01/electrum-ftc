@@ -2,13 +2,6 @@
 
 # python setup.py sdist --format=zip,gztar
 
-<<<<<<< HEAD
-from setuptools import setup
-from setuptools.command.build_py import build_py
-from setuptools.command.install import install
-from distutils import core
-=======
->>>>>>> 273e0c886c4c06724fc5179e5e238f43af901a81
 import os
 import sys
 import platform
@@ -56,11 +49,7 @@ if platform.system() in ['Linux', 'FreeBSD', 'DragonFly']:
             usr_share = os.path.expanduser('~/.local/share')
     data_files += [
         (os.path.join(usr_share, 'applications/'), ['electrum-ftc.desktop']),
-<<<<<<< HEAD
-        (os.path.join(usr_share, icons_dirname), ['icons/electrum_light.png'])
-=======
         (os.path.join(usr_share, icons_dirname), ['electrum/gui/icons/electrum_light.png']),
->>>>>>> 273e0c886c4c06724fc5179e5e238f43af901a81
     ]
 
 extras_require = {
